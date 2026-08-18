@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Juicios Evaluativos - Premium Dashboard</title>
+    <style>
+        :root {
+            --primary: #1a237e;
+            --primary-light: #3f51b5;
+            --secondary: #00c853;
+            --danger: #ff1744;
+            --warning: #ffab00;
+            --info: #00b0ff;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #263238;
+            --text-muted: #546e7a;
+            --border: #eceff1;
+            --sidebar-width: 260px;
+            --shadow: 0 4px 20px 0 rgba(0,0,0,.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #eef3f8 0%, #f8fbfa 100%);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        body.sidebar-collapsed .sidebar {
+            transform: translateX(calc(-1 * var(--sidebar-width)));
+        }
+
+        body.sidebar-collapsed .main-content {
+            margin-left: 0;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #111a63 0%, #202a86 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: 4px 0 18px rgba(10,22,55,0.18);
+            transition: transform 0.25s ease;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-menu {
+            padding: 1.5rem 0;
+            flex: 1;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.5);
+            font-weight: 700;
+        }
+
+        .nav-item {
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-left: 4px solid transparent;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: var(--secondary);
+        }
+
+        .nav-item i { font-size: 1.1rem; }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+
+        .header-top {
+            display: grid;
+            grid-template-columns: auto minmax(220px, 1fr) minmax(260px, 420px) auto;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-top h1 {
+            font-size: 1.55rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.02em;
+        }
+
+        .menu-toggle {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--primary);
+            background: white;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: var(--transition);
+        }
+
+        .menu-toggle:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-light);
+        }
+
+        .global-search {
+            position: relative;
+        }
+
+        .global-search input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.6rem;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: white;
+            box-shadow: 0 8px 22px rgba(20,31,70,0.06);
+        }
+
+        /* Compact Dashboard Layout */
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.25rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--primary);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card.green { border-top-color: var(--secondary); }
+        .stat-card.orange { border-top-color: var(--warning); }
+        .stat-card.red { border-top-color: var(--danger); }
+
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--text-main); }
+
+        .chart-container-compact {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-container-compact h3 {
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        /* Sections */
+        .section-card {
+            background: rgba(255,255,255,0.96);
+            border: 1px solid rgba(226,232,240,0.9);
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-header h2 { font-size: 1.1rem; color: var(--primary); font-weight: 700; }
+
+        /* Filters */
+        .filter-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: #f8fafc;
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .filter-group input, .filter-group select {
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            background: white;
+            transition: var(--transition);
+        }
+        .filter-group input:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.1); }
+
+        /* Buttons */
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-success { background: var(--secondary); color: white; }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-muted); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* Tables */
+        .table-wrapper { overflow-x: auto; margin-top: 1rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1rem; background: #fcfdfe; color: var(--primary); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; border-bottom: 2px solid var(--border); }
+        td { padding: 1rem; font-size: 0.85rem; border-bottom: 1px solid var(--border); color: var(--text-main); }
+        tr:hover { background: rgba(0,0,0,0.01); }
+
+        /* Badges & Progress */
+        .badge { padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff8e1; color: #f57f17; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .badge-info { background: #e3f2fd; color: #1565c0; }
+
+        .progress-mini { width: 100px; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; position: relative; }
+        .progress-mini-fill { height: 100%; background: var(--secondary); transition: var(--transition); }
+
+        .query-card {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: end;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #f8fbff;
+        }
+
+        .detail-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .detail-metric {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.85rem;
+        }
+
+        .detail-metric span {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+
+        .detail-metric strong {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .import-warning {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid #ffe0a3;
+            background: #fff8e6;
+            color: #6b4700;
+            font-size: 0.85rem;
+            line-height: 1.55;
+            text-align: left;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Accordion / Hamburger Detail */
+        .detail-row { background: #fbfcfe; display: none; }
+        .detail-container { padding: 1.5rem; }
+        .competency-accordion { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+        
+        .comp-item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .comp-header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .comp-header:hover { background: #f8f9fa; }
+        
+        .comp-title { display: flex; flex-direction: column; gap: 2px; }
+        .comp-name { font-weight: 700; font-size: 0.9rem; color: var(--primary); }
+        .comp-meta { font-size: 0.75rem; color: var(--text-muted); }
+
+        .comp-stats { display: flex; align-items: center; gap: 1rem; }
+
+        .comp-body { display: none; padding: 0; background: white; border-top: 1px solid var(--border); }
+        
+        .rap-table { width: 100%; }
+        .rap-table th { background: #fcfdfe; padding: 0.6rem 1.25rem; }
+        .rap-table td { padding: 0.8rem 1.25rem; font-size: 0.8rem; }
+
+        /* Tab Visibility */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Programs Grid & Cards */
+        .programs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .program-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .program-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        }
+
+        .program-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 0.75rem;
+        }
+
+        .program-card-title {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        .program-card-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .program-card-stats span strong {
+            color: var(--text-main);
+        }
+
+        .program-card-fichas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        /* Radar Academico */
+        .radar-layout {
+            display: grid;
+            grid-template-columns: minmax(360px, 1.1fr) minmax(320px, 0.9fr);
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .radar-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .radar-card {
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--primary);
+            border-radius: 12px;
+            padding: 1rem;
+            background: white;
+            display: grid;
+            gap: 0.75rem;
+            transition: var(--transition);
+        }
+
+        .radar-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+        }
+
+        .radar-card.risk-high { border-left-color: var(--danger); }
+        .radar-card.risk-medium { border-left-color: var(--warning); }
+        .radar-card.risk-low { border-left-color: var(--secondary); }
+
+        .radar-card-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .radar-card h3 {
+            font-size: 0.95rem;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .radar-card p {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            line-height: 1.45;
+        }
+
+        .risk-score {
+            min-width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: white;
+            font-weight: 800;
+            background: var(--primary);
+        }
+
+        .risk-high .risk-score { background: var(--danger); }
+        .risk-medium .risk-score { background: var(--warning); color: #3b2a00; }
+        .risk-low .risk-score { background: var(--secondary); }
+
+        .radar-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+        }
+
+        .radar-metric {
+            background: #f8fafb;
+            border-radius: 10px;
+            padding: 0.7rem;
+        }
+
+        .radar-metric span {
+            display: block;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .radar-metric strong {
+            font-size: 1rem;
+            color: var(--text-main);
+        }
+
+        .radar-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .recommendation-list {
+            padding-left: 1.2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+
+        .assistant-box {
+            border: 1px solid rgba(26, 35, 126, 0.12);
+            background: linear-gradient(135deg, #ffffff 0%, #f5fbff 100%);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .assistant-box p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.4rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-row { grid-template-columns: 1fr; }
+            .radar-layout { grid-template-columns: 1fr; }
+            .header-top { grid-template-columns: auto 1fr; }
+            .global-search, .user-profile { grid-column: 1 / -1; }
+            .sidebar { width: 70px; }
+            .sidebar-header h2, .nav-item span, .nav-section-title { display: none; }
+            .main-content { margin-left: 70px; }
+            body.sidebar-collapsed .sidebar { transform: translateX(-70px); }
+        }
+
+        @media (max-width: 720px) {
+            .main-content { padding: 1rem; }
+            .header-top { grid-template-columns: auto 1fr; gap: 0.75rem; }
+            .query-card { grid-template-columns: 1fr; }
+            .radar-metrics { grid-template-columns: 1fr; }
+        }
+
+        /* Toasts */
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: #333; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; animation: slideInRight 0.3s ease forwards; min-width: 250px; font-size: 0.85rem; font-weight: 500; }
+        .toast.success { background: var(--secondary); }
+        .toast.error { background: var(--danger); }
+        .toast.info { background: var(--info); }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; } }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-balance-scale"></i> <span>G-JUICIOS</span></h2>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-section-title">Principal</div>
+            <div class="nav-item active" onclick="switchTab('dashboard', this)">
+                <i class="fas fa-chart-line"></i> <span>Dashboard</span>
+            </div>
+            
+            <div class="nav-section-title">Aprendices</div>
+            <div class="nav-item" onclick="switchTab('gestion-aprendices', this)">
+                <i class="fas fa-users-cog"></i> <span>Gestión General</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('busqueda-aprendiz', this)">
+                <i class="fas fa-user-graduate"></i> <span>Detalle Aprendiz</span>
+            </div>
+
+            <div class="nav-section-title">Reportes</div>
+            <div class="nav-item" onclick="switchTab('reporte-pendientes', this)">
+                <i class="fas fa-exclamation-circle"></i> <span>Pendientes</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('radar-academico', this)">
+                <i class="fas fa-bullseye"></i> <span>Radar Académico</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('importar', this)">
+                <i class="fas fa-file-import"></i> <span>Importar Datos</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-top">
+            <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Ocultar o mostrar menu lateral">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 id="page-title">Dashboard de Seguimiento</h1>
+            <div class="global-search">
+                <input type="text" id="global-search-input" placeholder="Buscar por documento, nombre, ficha o programa...">
+                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+            </div>
+            <div class="user-profile">
+                <span id="current-date" style="font-size: 0.85rem; color: var(--text-muted);"></span>
+            </div>
+        </div>
+
+        <!-- ── TAB: DASHBOARD ── -->
+        <div id="tab-dashboard" class="tab-content active">
+            <div class="dashboard-row">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Aprendices Activos</div>
+                        <div class="stat-value" id="dash-total-aprendices">--</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-label">Juicios Aprobados</div>
+                        <div class="stat-value" id="dash-total-aprobados">--</div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-label">Pendientes</div>
+                        <div class="stat-value" id="dash-total-pendientes">--</div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-label">No Aprobados</div>
+                        <div class="stat-value" id="dash-total-no-aprobados">--</div>
+                    </div>
+                </div>
+                <div class="chart-container-compact">
+                    <h3>Estado General de Juicios</h3>
+                    <div style="height: 180px; width: 180px;">
+                        <canvas id="mainDonutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>Resumen por Programa</h2>
+                </div>
+                <div id="dash-programas-grid" class="programs-grid">
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando resumen de programas...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: GESTION APRENDICES ── -->
+        <div id="tab-gestion-aprendices" class="tab-content">
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>Gestión General de Aprendices</h2>
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Buscar</label>
+                        <input type="text" id="ga-search" placeholder="Nombre, documento, ficha o programa..." oninput="consultarGestionGeneral()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Programa</label>
+                        <select id="ga-id-programa" onchange="loadFichas('ga')">
+                            <option value="">Todos los programas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Ficha</label>
+                        <select id="ga-id-ficha">
+                            <option value="">Todas las fichas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Estado</label>
+                        <select id="ga-estado">
+                            <option value="">Todos los estados</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="justify-content: flex-end;">
+                        <button class="btn btn-primary" onclick="consultarGestionGeneral()">
+                            <i class="fas fa-search"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Documento</th>
+                                <th>Nombre Completo</th>
+                                <th>Ficha</th>
+                                <th>Estado</th>
+                                <th>Avance</th>
+                                <th>Pendientes</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ga-aprendices-tbody">
+                            <tr><td colspan="7" style="text-align:center; color: var(--text-muted);">Use los filtros para buscar aprendices</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: BUSQUEDA/DETALLE APRENDIZ (FOCUS AP3) ── -->
+        <div id="tab-busqueda-aprendiz" class="tab-content">
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>Búsqueda Detallada por Aprendiz</h2>
+                </div>
+                <div class="query-card">
+                    <div class="filter-group">
+                        <label>Consulta cómoda</label>
+                        <input type="text" id="ba-search" placeholder="Escriba documento, nombre o apellido del aprendiz..." oninput="debounceSearchDetail()">
+                    </div>
+                    <button class="btn btn-success" onclick="consultarDetalleAprendiz()">
+                        <i class="fas fa-user-check"></i> Buscar aprendiz
+                    </button>
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Programa</label>
+                        <select id="ba-id-programa" onchange="consultarDetalleAprendiz()">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Filtrar Competencia</label>
+                        <input type="text" id="ba-comp-filter" placeholder="Nombre o código..." oninput="debounceSearchDetail()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Mostrar</label>
+                        <select id="ba-status-filter" onchange="consultarDetalleAprendiz()">
+                            <option value="">Todos los resultados</option>
+                            <option value="pendientes">Solo pendientes</option>
+                            <option value="aprobados">Solo aprobados</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="ba-results-container">
+                    <div style="text-align:center; padding: 3rem; color: var(--text-muted);">
+                        <i class="fas fa-id-card-alt fa-3x" style="margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <p>Ingrese el documento o nombre del aprendiz para ver su avance por competencia</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: PENDIENTES ── -->
+        <div id="tab-reporte-pendientes" class="tab-content">
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>Aprendices con Juicios Pendientes</h2>
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Buscar Aprendiz</label>
+                        <input type="text" id="pend-search" placeholder="Documento o nombre...">
+                    </div>
+                    <div class="filter-group" style="justify-content: flex-end;">
+                        <button class="btn btn-primary" onclick="loadPendientes()">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Documento</th>
+                                <th>Aprendiz</th>
+                                <th>Ficha</th>
+                                <th>Programa</th>
+                                <th>Pendientes</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendientes-tbody">
+                            <tr><td colspan="6" style="text-align:center;">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: RADAR ACADEMICO ── -->
+        <div id="tab-radar-academico" class="tab-content">
+            <div class="section-card">
+                <div class="section-header">
+                    <div>
+                        <h2>Radar Académico Inteligente</h2>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem;">
+                            Priorización automática de aprendices según pendientes, no aprobados y tiempo sin actualización.
+                        </p>
+                    </div>
+                    <button class="btn btn-outline" onclick="loadRadarAcademico()">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+
+                <div class="assistant-box">
+                    <strong style="color: var(--primary);"><i class="fas fa-lightbulb"></i> Función innovadora del proyecto</strong>
+                    <p>El sistema calcula un semáforo de riesgo y genera recomendaciones de seguimiento para coordinación e instructores.</p>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Buscar aprendiz</label>
+                        <input type="text" id="radar-search" placeholder="Documento, nombre, ficha o programa..." oninput="debounceRadar()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Nivel de riesgo</label>
+                        <select id="radar-risk-filter" onchange="renderRadarList()">
+                            <option value="">Todos</option>
+                            <option value="Alto">Alto</option>
+                            <option value="Medio">Medio</option>
+                            <option value="Bajo">Bajo</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Ordenar por</label>
+                        <select id="radar-sort" onchange="renderRadarList()">
+                            <option value="riesgo">Mayor riesgo</option>
+                            <option value="pendientes">Más pendientes</option>
+                            <option value="avance">Menor avance</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="justify-content: flex-end;">
+                        <button class="btn btn-primary" onclick="loadRadarAcademico()">
+                            <i class="fas fa-search"></i> Analizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="radar-summary">
+                    <div class="stat-card red">
+                        <div class="stat-label">Riesgo alto</div>
+                        <div class="stat-value" id="radar-high-count">--</div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-label">Riesgo medio</div>
+                        <div class="stat-value" id="radar-medium-count">--</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-label">Riesgo bajo</div>
+                        <div class="stat-value" id="radar-low-count">--</div>
+                    </div>
+                </div>
+
+                <div class="radar-layout">
+                    <div id="radar-list">
+                        <div style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                            <i class="fas fa-spinner fa-spin"></i> Cargando radar académico...
+                        </div>
+                    </div>
+                    <div id="radar-detail" class="section-card" style="margin-bottom:0;">
+                        <div style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                            Seleccione un aprendiz para ver el plan de seguimiento sugerido.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: IMPORTAR ── -->
+        <div id="tab-importar" class="tab-content">
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>Importación Masiva (Excel)</h2>
+                </div>
+                <div style="max-width: 600px; margin: 0 auto; text-align: center; padding: 2rem;">
+                    <div style="border: 2px dashed var(--border); padding: 3rem; border-radius: 16px; margin-bottom: 1.5rem;">
+                        <i class="fas fa-cloud-upload-alt fa-4x" style="color: var(--primary); margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Seleccione el archivo consolidado de juicios (.xlsx)</p>
+                        <div class="import-warning">
+                            <strong>Validación activa:</strong> solo se importan archivos relacionados con juicios evaluativos. El Excel debe traer hojas del sistema o columnas como documento, aprendiz, competencia, resultado, juicio y fecha.
+                        </div>
+                        <input type="file" id="excel-file" accept=".xlsx" style="display:none;" onchange="updateFileName(this)">
+                        <button class="btn btn-outline" onclick="document.getElementById('excel-file').click()">Seleccionar Archivo</button>
+                        <div id="file-name" style="margin-top: 1rem; font-weight: 600; color: var(--primary);"></div>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="uploadExcel()">
+                        Comenzar Importación
+                    </button>
+                    <div id="import-progress" style="margin-top: 1.5rem; display: none;">
+                        <div class="progress-mini" style="width: 100%; height: 12px;">
+                            <div class="progress-mini-fill" style="width: 0%;" id="import-bar"></div>
+                        </div>
+                        <p id="import-msg" style="font-size: 0.8rem; margin-top: 0.5rem;"></p>
+                    </div>
+                    <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <button class="btn btn-outline" style="color: var(--danger); border-color: var(--danger); width: 100%; justify-content: center;" onclick="eliminarTodo()">
+                            <i class="fas fa-trash-alt"></i> Eliminar Todos los Datos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        const API_BASE = "http://localhost:3000/api";
+        let mainChart = null;
+        let debounceTimer;
+        let radarTimer;
+        let radarData = [];
+
+        // --- Core UI functions ---
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sidebar-collapsed', document.body.classList.contains('sidebar-collapsed') ? '1' : '0');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let icon = 'info-circle';
+            if(type === 'success') icon = 'check-circle';
+            if(type === 'error') icon = 'exclamation-circle';
+            toast.innerHTML = `<i class="fas fa-${icon}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- Core Navigation ---
+        function switchTab(tabName, element) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            element.classList.add('active');
+            
+            if (tabName === 'dashboard') loadDashboardData();
+            if (tabName === 'reporte-pendientes') loadPendientes();
+            if (tabName === 'radar-academico') loadRadarAcademico();
+        }
+
+        // --- Dashboard & General Data ---
+        async function loadDashboardData() {
+            try {
+                const res = await fetch(`${API_BASE}/dashboard/resumen-general`);
+                const data = await res.json();
+                if (!data.ok) return;
+
+                const d = data.data;
+                // Usamos aprendices_en_formacion para que se vea el cambio al borrar fichas
+                document.getElementById('dash-total-aprendices').textContent = d.aprendices_en_formacion || d.total_aprendices;
+                document.getElementById('dash-total-aprobados').textContent = d.juicios_aprobados;
+                document.getElementById('dash-total-pendientes').textContent = d.juicios_pendientes;
+                const noAprob = (d.total_juicios || 0) - (d.juicios_aprobados || 0) - (d.juicios_pendientes || 0);
+                document.getElementById('dash-total-no-aprobados').textContent = noAprob < 0 ? 0 : noAprob;
+
+                updateDonutChart(d.juicios_aprobados, d.juicios_pendientes, noAprob < 0 ? 0 : noAprob);
+                
+                // Program summary table grouping
+                const progRes = await fetch(`${API_BASE}/fn_total_aprendices`);
+                const progData = await progRes.json();
+                
+                // Fetch aprobados by program using an existing dashboard endpoint if possible, 
+                // or just group by program name from total_aprendices to avoid duplicates.
+                const progMap = {};
+                if(progData.ok && progData.data) {
+                    progData.data.forEach(p => {
+                        const name = (p.programa || "Sin Programa").trim();
+                        if (!progMap[name]) progMap[name] = { total_aprendices: 0, fichas: [] };
+                        progMap[name].total_aprendices += parseInt(p.total_aprendices) || 0;
+                        if(p.codigo_ficha) progMap[name].fichas.push(p.codigo_ficha);
+                    });
+                }
+
+                const grid = document.getElementById('dash-programas-grid');
+                if(Object.keys(progMap).length > 0) {
+                    grid.innerHTML = Object.entries(progMap).map(([progName, stats]) => `
+                        <div class="program-card">
+                            <div class="program-card-header">
+                                <div class="program-card-title">${progName}</div>
+                            </div>
+                            <div class="program-card-stats">
+                                <span><i class="fas fa-users"></i> Aprendices: <strong>${stats.total_aprendices}</strong></span>
+                                <span><i class="fas fa-id-card"></i> Fichas: <strong>${stats.fichas.length}</strong></span>
+                            </div>
+                            <div class="program-card-fichas">
+                                ${stats.fichas.map(f => `
+                                    <span class="badge badge-info" style="display:flex; align-items:center; gap:8px; padding: 0.5rem 0.75rem;">
+                                        ${f} 
+                                        <i class="fas fa-times" style="cursor:pointer; color:var(--danger); font-size: 0.9rem;" 
+                                           onclick="eliminarFicha('${f}')" title="Eliminar ficha ${f}"></i>
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">No hay datos de programas disponibles</div>';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function updateDonutChart(ap, pe, na) {
+            const ctx = document.getElementById('mainDonutChart').getContext('2d');
+            if (mainChart) mainChart.destroy();
+            mainChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Aprobados', 'Pendientes', 'No Aprobados'],
+                    datasets: [{
+                        data: [ap, pe, na],
+                        backgroundColor: ['#00c853', '#ffab00', '#ff1744'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { 
+                    plugins: { 
+                        legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 10 } } } 
+                    }, 
+                    cutout: '60%', 
+                    responsive: true, 
+                    maintainAspectRatio: false 
+                }
+            });
+        }
+
+        // --- Gestion General ---
+        async function consultarGestionGeneral() {
+            const progId = document.getElementById('ga-id-programa').value;
+            const fichaId = document.getElementById('ga-id-ficha').value;
+            const estadoId = document.getElementById('ga-estado').value;
+            const searchText = normalizeText(document.getElementById('ga-search')?.value || '');
+            const tbody = document.getElementById('ga-aprendices-tbody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Consultando...</td></tr>';
+
+            try {
+                const res = await fetch(`${API_BASE}/fn_resultados_por_aprendiz?p_id_programa=${progId}&p_id_ficha=${fichaId}`);
+                const data = await res.json();
+                
+                let results = data.data || [];
+                
+                // Normalizar acentos y mayúsculas para comparar bien
+                const normalize = normalizeText;
+
+                if (searchText) {
+                    results = results.filter(r => normalize([
+                        r.documento,
+                        r.nombre_completo,
+                        r.codigo_ficha,
+                        r.programa,
+                        r.estado_matricula,
+                        r.estado
+                    ].join(' ')).includes(searchText));
+                }
+
+                // Filtro en frontend por estado si fue seleccionado
+                if (estadoId) {
+                    const select = document.getElementById('ga-estado');
+                    const selectedText = normalize(select.options[select.selectedIndex].text);
+                    results = results.filter(r => {
+                        const rEstado = normalize(r.estado_matricula || r.estado || 'EN FORMACION');
+                        return rEstado === selectedText;
+                    });
+                }
+
+                if(results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No se encontraron aprendices con ese criterio.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = results.map(r => {
+                    const estado = (r.estado_matricula || r.estado || 'En formación').toUpperCase();
+                    const isActivo = normalize(estado).includes('FORMACION') || normalize(estado).includes('ACTIVO');
+                    const avance = Math.round(Number(r.porcentaje_avance || 0));
+                    return `
+                        <tr>
+                            <td>${r.documento}</td>
+                            <td><strong>${r.nombre_completo}</strong><br><span style="color:var(--text-muted); font-size:0.75rem;">${r.programa || ''}</span></td>
+                            <td><span class="badge badge-info">${r.codigo_ficha || 'N/D'}</span></td>
+                            <td><span class="badge ${isActivo ? 'badge-success' : 'badge-danger'}">${estado}</span></td>
+                            <td><div class="progress-mini" style="width:130px;"><div class="progress-mini-fill" style="width:${avance}%"></div></div><span style="font-size:0.75rem; color:var(--text-muted);">${avance}%</span></td>
+                            <td><span class="badge ${Number(r.pendientes || 0) > 0 ? 'badge-warning' : 'badge-success'}">${r.pendientes || 0}</span></td>
+                            <td><div class="table-actions"><button class="btn btn-outline" onclick="viewLearnerDetail('${r.documento}')"><i class="fas fa-eye"></i> Detalle</button></div></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="7">Error de conexion al consultar aprendices.</td></tr>'; }
+        }
+
+        // --- Detalle Aprendiz ---
+        function debounceSearchDetail() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                consultarDetalleAprendiz();
+            }, 500);
+        }
+
+        async function consultarDetalleAprendiz() {
+            const search = document.getElementById('ba-search').value.trim();
+            const compFilter = document.getElementById('ba-comp-filter').value.trim();
+            const statusFilter = document.getElementById('ba-status-filter')?.value || '';
+            const container = document.getElementById('ba-results-container');
+            container.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Consultando detalle...</div>';
+
+            try {
+                const progId = document.getElementById('ba-id-programa').value;
+                let url = `${API_BASE}/fn_resultados_por_aprendiz?`;
+                if(search) {
+                    if(!isNaN(search)) url += `p_documento=${search}&`;
+                    else url += `p_nombre_aprendiz=${search}&`;
+                }
+                if(progId) url += `p_id_programa=${progId}&`;
+
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                container.innerHTML = '';
+                if(!data.ok || !data.data || data.data.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding: 2rem;">No se encontraron resultados.</div>';
+                    return;
+                }
+
+                for (const learner of data.data) {
+                    const detailRes = await fetch(`${API_BASE}/fn_busqueda_maestra?p_documento_aprendiz=${encodeURIComponent(learner.documento)}${compFilter ? '&p_codigo_competencia='+encodeURIComponent(compFilter) : ''}`);
+                    const detailData = await detailRes.json();
+                    let details = detailData.data || [];
+                    if (statusFilter === 'pendientes') details = details.filter(d => !isApproved(d.juicio));
+                    if (statusFilter === 'aprobados') details = details.filter(d => isApproved(d.juicio));
+                    renderLearnerCard(container, learner, details);
+                }
+            } catch (e) { container.innerHTML = '<div style="text-align:center; color:red;">Error de conexión</div>'; }
+        }
+
+        function renderLearnerCard(container, summary, details) {
+            details = Array.isArray(details) ? details : [];
+            const card = document.createElement('div');
+            card.className = 'section-card';
+            card.style.borderLeft = '6px solid var(--primary)';
+            
+            const byComp = {};
+            details.forEach(d => {
+                if (!byComp[d.codigo_competencia]) byComp[d.codigo_competencia] = { name: d.nombre_competencia, items: [], aprobados: 0 };
+                byComp[d.codigo_competencia].items.push(d);
+                if (d.juicio === 'APROBADO' || d.juicio === 'AP') byComp[d.codigo_competencia].aprobados++;
+            });
+
+            const accordionHtml = Object.keys(byComp).map((code, idx) => {
+                const comp = byComp[code];
+                const pct = Math.round((comp.aprobados / comp.items.length) * 100);
+                const statusClass = pct === 100 ? 'comp-completed' : 'comp-pending';
+                return `
+                    <div class="comp-item ${statusClass}">
+                        <div class="comp-header" onclick="toggleAccordion('body-${summary.documento}-${idx}')">
+                            <div class="comp-title"><span class="comp-name">${code} - ${comp.name}</span></div>
+                            <div class="comp-stats">
+                                <div class="progress-mini"><div class="progress-mini-fill" style="width:${pct}%"></div></div>
+                                <span class="badge ${pct===100?'badge-success':'badge-warning'}">${pct}%</span>
+                            </div>
+                        </div>
+                        <div class="comp-body" id="body-${summary.documento}-${idx}" style="display:none;">
+                            <table class="rap-table">
+                                <thead><tr><th>Resultado</th><th>Estado</th><th>Fecha</th></tr></thead>
+                                <tbody>${comp.items.map(rap => `<tr><td>${rap.resultado}</td><td><span class="badge ${rap.juicio==='APROBADO'||rap.juicio==='AP'?'badge-success':'badge-warning'}">${rap.juicio}</span></td><td>${formatDate(rap.fecha_hora)}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            const estado = (summary.estado_matricula || summary.estado || 'En formación').toUpperCase();
+            const isActivo = estado.includes('FORMACION') || estado.includes('ACTIVO');
+            const totalResultados = Number(summary.total_resultados || details.length || 0);
+            const aprobados = Number(summary.aprobados || details.filter(d => isApproved(d.juicio)).length || 0);
+            const noAprobados = Number(summary.no_aprobados || details.filter(d => isNotApproved(d.juicio)).length || 0);
+            const pendientes = Number(summary.pendientes || Math.max(totalResultados - aprobados - noAprobados, 0));
+            const avance = Math.round(Number(summary.porcentaje_avance || (totalResultados ? (aprobados / totalResultados) * 100 : 0)));
+
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; flex-wrap:wrap; gap:1rem;">
+                    <div>
+                        <h3 style="color:var(--primary); font-size:1.2rem;">${summary.nombre_completo}</h3>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">
+                            <strong>Documento:</strong> ${summary.documento} | <strong>Ficha:</strong> ${summary.codigo_ficha}
+                            <span class="badge ${isActivo ? 'badge-success' : 'badge-danger'}" style="margin-left:10px;">${estado}</span>
+                        </p>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-outline" style="padding:0.4rem 0.8rem; font-size:0.75rem;" onclick="filterCompetencies('${summary.documento}', 'all')">Todas</button>
+                        <button class="btn btn-outline" style="padding:0.4rem 0.8rem; font-size:0.75rem; color:var(--secondary); border-color:var(--secondary);" onclick="filterCompetencies('${summary.documento}', 'completed')"><i class="fas fa-check"></i> Completadas</button>
+                        <button class="btn btn-outline" style="padding:0.4rem 0.8rem; font-size:0.75rem; color:var(--warning); border-color:var(--warning);" onclick="filterCompetencies('${summary.documento}', 'pending')"><i class="fas fa-clock"></i> Pendientes</button>
+                    </div>
+                </div>
+                <div class="detail-summary-grid">
+                    <div class="detail-metric"><span>Total resultados</span><strong>${totalResultados}</strong></div>
+                    <div class="detail-metric"><span>Aprobados</span><strong>${aprobados}</strong></div>
+                    <div class="detail-metric"><span>Pendientes</span><strong>${pendientes}</strong></div>
+                    <div class="detail-metric"><span>No aprobados</span><strong>${noAprobados}</strong></div>
+                    <div class="detail-metric"><span>Avance</span><strong>${avance}%</strong></div>
+                </div>
+                <div class="progress-mini" style="width:100%; height:12px; margin-bottom:1rem;"><div class="progress-mini-fill" style="width:${avance}%"></div></div>
+                <div class="competency-accordion" id="accordion-${summary.documento}">
+                    ${accordionHtml}
+                </div>
+            `;
+            container.appendChild(card);
+        }
+
+        function filterCompetencies(doc, filterType) {
+            const items = document.querySelectorAll(`#accordion-${doc} .comp-item`);
+            items.forEach(item => {
+                if(filterType === 'all') {
+                    item.style.display = 'block';
+                } else if(filterType === 'completed') {
+                    item.style.display = item.classList.contains('comp-completed') ? 'block' : 'none';
+                } else if(filterType === 'pending') {
+                    item.style.display = item.classList.contains('comp-pending') ? 'block' : 'none';
+                }
+            });
+        }
+
+        function toggleAccordion(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // --- Radar Academico Inteligente ---
+        function debounceRadar() {
+            clearTimeout(radarTimer);
+            radarTimer = setTimeout(renderRadarList, 350);
+        }
+
+        function normalizeText(value) {
+            return String(value || '')
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toUpperCase();
+        }
+
+        function isApproved(value) {
+            const v = normalizeText(value);
+            return v === 'APROBADO' || v === 'AP';
+        }
+
+        function isNotApproved(value) {
+            const v = normalizeText(value);
+            return v.includes('NO APROBADO') || v === 'NA';
+        }
+
+        function calculateRisk(summary, details) {
+            const total = details.length || Number(summary.total_resultados || summary.total || 0);
+            const aprobados = details.filter(item => isApproved(item.juicio)).length || Number(summary.aprobados || 0);
+            const noAprobados = details.filter(item => isNotApproved(item.juicio)).length;
+            const pendientes = Math.max(total - aprobados - noAprobados, 0);
+            const avance = total ? Math.round((aprobados / total) * 100) : 0;
+            const fechas = details
+                .map(item => new Date(item.fecha_hora || item.fecha || item.fecha_juicio))
+                .filter(date => !Number.isNaN(date.getTime()))
+                .sort((a, b) => b - a);
+            const diasSinActualizar = fechas.length ? Math.max(0, Math.round((new Date() - fechas[0]) / 86400000)) : 99;
+            const estado = normalizeText(summary.estado_matricula || summary.estado || 'EN FORMACION');
+            const ratioPendiente = total ? pendientes / total : 1;
+            let score = Math.round((ratioPendiente * 45) + (noAprobados * 18) + Math.min(diasSinActualizar, 60) * 0.55);
+
+            if (estado.includes('RETIR')) score += 20;
+            if (estado.includes('TRASLAD')) score += 8;
+            if (avance >= 90 && pendientes === 0 && noAprobados === 0) score = Math.min(score, 18);
+
+            const riesgo = score >= 55 ? 'Alto' : score >= 28 ? 'Medio' : 'Bajo';
+            return { total, aprobados, noAprobados, pendientes, avance, diasSinActualizar, score, riesgo };
+        }
+
+        function radarRecommendations(item) {
+            const recs = [];
+            if (item.pendientes > 0) recs.push(`Programar evaluación para ${item.pendientes} resultado(s) pendiente(s).`);
+            if (item.noAprobados > 0) recs.push('Asignar actividad de refuerzo y nueva evidencia para resultados no aprobados.');
+            if (item.diasSinActualizar > 20) recs.push('Solicitar actualización al funcionario responsable por falta de registro reciente.');
+            if (item.riesgo === 'Alto') recs.push('Priorizar seguimiento esta semana con coordinación, instructor y aprendiz.');
+            if (item.riesgo === 'Bajo') recs.push('Mantener seguimiento regular; no presenta alertas críticas.');
+            return recs;
+        }
+
+        async function loadRadarAcademico() {
+            const list = document.getElementById('radar-list');
+            const detail = document.getElementById('radar-detail');
+            list.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Analizando aprendices...</div>';
+            detail.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);">Calculando planes de seguimiento...</div>';
+
+            try {
+                const res = await fetch(`${API_BASE}/fn_resultados_por_aprendiz`);
+                const data = await res.json();
+                const learners = data.data || [];
+
+                radarData = await Promise.all(learners.map(async learner => {
+                    try {
+                        const detailRes = await fetch(`${API_BASE}/fn_busqueda_maestra?p_documento_aprendiz=${encodeURIComponent(learner.documento)}`);
+                        const detailData = await detailRes.json();
+                        const details = detailData.data || [];
+                        const metrics = calculateRisk(learner, details);
+                        return { ...learner, ...metrics, details };
+                    } catch (error) {
+                        const metrics = calculateRisk(learner, []);
+                        return { ...learner, ...metrics, details: [] };
+                    }
+                }));
+
+                renderRadarList();
+            } catch (error) {
+                list.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--danger);">No fue posible cargar el radar académico.</div>';
+                detail.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);">Revise que el servidor y PostgreSQL estén activos.</div>';
+            }
+        }
+
+        function getFilteredRadarData() {
+            const search = normalizeText(document.getElementById('radar-search')?.value || '');
+            const risk = document.getElementById('radar-risk-filter')?.value || '';
+            const sort = document.getElementById('radar-sort')?.value || 'riesgo';
+
+            let data = [...radarData];
+            if (search) {
+                data = data.filter(item => normalizeText([
+                    item.documento,
+                    item.nombre_completo,
+                    item.codigo_ficha,
+                    item.programa,
+                    item.estado_matricula,
+                    item.estado
+                ].join(' ')).includes(search));
+            }
+            if (risk) data = data.filter(item => item.riesgo === risk);
+
+            data.sort((a, b) => {
+                if (sort === 'pendientes') return b.pendientes - a.pendientes || b.score - a.score;
+                if (sort === 'avance') return a.avance - b.avance || b.score - a.score;
+                return b.score - a.score || b.pendientes - a.pendientes;
+            });
+            return data;
+        }
+
+        function renderRadarList() {
+            const list = document.getElementById('radar-list');
+            if (!list) return;
+
+            const data = getFilteredRadarData();
+            const counts = radarData.reduce((acc, item) => {
+                acc[item.riesgo] = (acc[item.riesgo] || 0) + 1;
+                return acc;
+            }, {});
+            document.getElementById('radar-high-count').textContent = counts.Alto || 0;
+            document.getElementById('radar-medium-count').textContent = counts.Medio || 0;
+            document.getElementById('radar-low-count').textContent = counts.Bajo || 0;
+
+            if (!data.length) {
+                list.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);">No hay aprendices para los filtros seleccionados.</div>';
+                renderRadarDetail(null);
+                return;
+            }
+
+            list.innerHTML = data.map(item => {
+                const riskClass = item.riesgo === 'Alto' ? 'risk-high' : item.riesgo === 'Medio' ? 'risk-medium' : 'risk-low';
+                return `
+                    <div class="radar-card ${riskClass}">
+                        <div class="radar-card-top">
+                            <div>
+                                <h3>${item.nombre_completo || 'Aprendiz sin nombre'}</h3>
+                                <p><strong>Documento:</strong> ${item.documento} · <strong>Ficha:</strong> ${item.codigo_ficha || 'N/D'}</p>
+                                <p>${item.programa || 'Programa no registrado'}</p>
+                            </div>
+                            <div class="risk-score">${item.score}</div>
+                        </div>
+                        <div class="radar-metrics">
+                            <div class="radar-metric"><span>Riesgo</span><strong>${item.riesgo}</strong></div>
+                            <div class="radar-metric"><span>Avance</span><strong>${item.avance}%</strong></div>
+                            <div class="radar-metric"><span>Pendientes</span><strong>${item.pendientes}</strong></div>
+                        </div>
+                        <div class="radar-actions">
+                            <button class="btn btn-outline" onclick="renderRadarDetailByDoc('${item.documento}')"><i class="fas fa-clipboard-list"></i> Plan</button>
+                            <button class="btn btn-outline" onclick="viewLearnerDetail('${item.documento}')"><i class="fas fa-eye"></i> Ver detalle</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            renderRadarDetail(data[0]);
+        }
+
+        function renderRadarDetailByDoc(documento) {
+            const item = radarData.find(row => String(row.documento) === String(documento));
+            renderRadarDetail(item);
+        }
+
+        function renderRadarDetail(item) {
+            const detail = document.getElementById('radar-detail');
+            if (!detail) return;
+
+            if (!item) {
+                detail.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-muted);">Seleccione un aprendiz para ver el plan de seguimiento sugerido.</div>';
+                return;
+            }
+
+            const riskClass = item.riesgo === 'Alto' ? 'badge-danger' : item.riesgo === 'Medio' ? 'badge-warning' : 'badge-success';
+            detail.innerHTML = `
+                <div class="section-header" style="align-items:flex-start;">
+                    <div>
+                        <h2>${item.nombre_completo || 'Aprendiz sin nombre'}</h2>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem;">${item.documento} · Ficha ${item.codigo_ficha || 'N/D'}</p>
+                    </div>
+                    <span class="badge ${riskClass}">Riesgo ${item.riesgo}</span>
+                </div>
+                <div class="radar-metrics" style="margin-bottom:1rem;">
+                    <div class="radar-metric"><span>Puntaje</span><strong>${item.score}/100</strong></div>
+                    <div class="radar-metric"><span>Aprobados</span><strong>${item.aprobados}</strong></div>
+                    <div class="radar-metric"><span>No aprobados</span><strong>${item.noAprobados}</strong></div>
+                    <div class="radar-metric"><span>Pendientes</span><strong>${item.pendientes}</strong></div>
+                    <div class="radar-metric"><span>Avance</span><strong>${item.avance}%</strong></div>
+                    <div class="radar-metric"><span>Sin actualizar</span><strong>${item.diasSinActualizar} días</strong></div>
+                </div>
+                <h3 style="color:var(--primary); margin-bottom:0.75rem;">Plan de seguimiento sugerido</h3>
+                <ul class="recommendation-list">
+                    ${radarRecommendations(item).map(rec => `<li>${rec}</li>`).join('')}
+                </ul>
+                <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1rem;">
+                    <button class="btn btn-primary" onclick="copyRadarPlan('${item.documento}')"><i class="fas fa-copy"></i> Copiar plan</button>
+                    <button class="btn btn-outline" onclick="viewLearnerDetail('${item.documento}')"><i class="fas fa-user-graduate"></i> Abrir detalle</button>
+                </div>
+            `;
+        }
+
+        function copyRadarPlan(documento) {
+            const item = radarData.find(row => String(row.documento) === String(documento));
+            if (!item) return;
+            const text = [
+                `Plan de seguimiento - ${item.nombre_completo}`,
+                `Documento: ${item.documento}`,
+                `Ficha: ${item.codigo_ficha || 'N/D'}`,
+                `Riesgo: ${item.riesgo} (${item.score}/100)`,
+                `Avance: ${item.avance}%`,
+                ...radarRecommendations(item).map((rec, index) => `${index + 1}. ${rec}`)
+            ].join('\n');
+            navigator.clipboard?.writeText(text);
+            showToast('Plan de seguimiento copiado.', 'success');
+        }
+
+        function formatDate(value) {
+            const date = new Date(value);
+            if (!value || Number.isNaN(date.getTime())) return 'Sin fecha';
+            return date.toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: '2-digit' });
+        }
+
+        async function loadPendientes() {
+            const search = document.getElementById('pend-search') ? document.getElementById('pend-search').value : '';
+            const tbody = document.getElementById('pendientes-tbody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+            
+            try {
+                let url = `${API_BASE}/fn_aprendices_pendientes`;
+                if(search) {
+                    url += `?${!isNaN(search) ? 'p_documento=' : 'p_nombre_aprendiz='}${search}`;
+                }
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if(!data.ok || !data.data || data.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay aprendices pendientes con ese criterio.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.data.map(p => `
+                    <tr><td>${p.documento}</td><td>${p.aprendiz}</td><td>${p.codigo_ficha}</td><td>${p.programa}</td><td><span class="badge badge-danger">${p.juicios_pendientes || p.pendientes} Pendientes</span></td><td><button class="btn btn-outline" onclick="viewLearnerDetail('${p.documento}')"><i class="fas fa-eye"></i></button></td></tr>
+                `).join('');
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Error al cargar pendientes.</td></tr>';
+            }
+        }
+
+        async function eliminarTodo() {
+            if(!confirm("⚠️ ADVERTENCIA ⚠️\n¿Está seguro que desea eliminar TODOS los datos importados?\nEsta acción no se puede deshacer.")) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/database/clear`, { method: 'DELETE' });
+                const data = await res.json();
+                if(data.ok) {
+                    showToast("Base de datos limpiada correctamente.", "success");
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast("Error al limpiar: " + data.message, "error");
+                }
+            } catch (e) {
+                showToast("Error de conexión al intentar limpiar.", "error");
+            }
+        }
+
+        async function eliminarFicha(codigo) {
+            if(!confirm(`⚠️ ¿Está seguro que desea eliminar la ficha ${codigo} y todas sus matrículas asociadas?`)) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/ficha/${codigo}`, { method: 'DELETE' });
+                const data = await res.json();
+                if(data.ok) {
+                    showToast("Ficha eliminada correctamente.", "success");
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast("Error al eliminar ficha: " + data.message, "error");
+                }
+            } catch (e) {
+                showToast("Error de conexión al intentar eliminar ficha.", "error");
+            }
+        }
+
+        function updateFileName(input) {
+            const file = input.files[0];
+            const nameEl = document.getElementById('file-name');
+            if (file) {
+                nameEl.textContent = file.name;
+            } else {
+                nameEl.textContent = '';
+            }
+        }
+
+        async function uploadExcel() {
+            const fileInput = document.getElementById('excel-file');
+            const file = fileInput.files[0];
+            if (!file) {
+                showToast("Por favor seleccione un archivo Excel consolidado.", "error");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const progressContainer = document.getElementById('import-progress');
+            const progressBar = document.getElementById('import-bar');
+            const progressMsg = document.getElementById('import-msg');
+
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '30%';
+            progressBar.style.backgroundColor = 'var(--secondary)';
+            progressMsg.textContent = "Subiendo y analizando el archivo...";
+
+            try {
+                const res = await fetch(`${API_BASE}/import/excel`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                progressBar.style.width = '70%';
+                progressMsg.textContent = "Guardando en la base de datos...";
+
+                const data = await res.json();
+                
+                if (data.ok) {
+                    progressBar.style.width = '100%';
+                    progressMsg.textContent = "¡Importación completada exitosamente!";
+                    setTimeout(() => {
+                        showToast("Importación finalizada. Recargando...", "success");
+                        setTimeout(() => location.reload(), 1500);
+                    }, 1000);
+                } else {
+                    progressBar.style.backgroundColor = 'var(--danger)';
+                    progressMsg.textContent = "Error: " + (data.message || "Revisa la consola para más detalles.");
+                    console.error(data.detail);
+                }
+            } catch (err) {
+                progressBar.style.backgroundColor = 'var(--danger)';
+                progressMsg.textContent = "Error de conexión con el servidor.";
+            }
+        }
+
+        function viewLearnerDetail(doc) {
+            document.getElementById('ba-search').value = doc;
+            switchTab('busqueda-aprendiz', document.querySelector('.fa-user-graduate').parentNode);
+            consultarDetalleAprendiz();
+        }
+
+        async function loadOptions() {
+            const res = await fetch(`${API_BASE}/options`);
+            const json = await res.json();
+            
+            const fill = (id, list, v, t, defaultText="Todos") => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.innerHTML = `<option value="">${defaultText}</option>` + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('');
+                }
+            };
+            
+            // Deduplicar estados y capitalizar (primera letra mayúscula) para que se vea bien
+            const estadosUnicos = [];
+            const estadosSet = new Set();
+            (json.data.estados || []).forEach(e => {
+                const upperName = String(e.descripcion || '').trim().toUpperCase();
+                if(!estadosSet.has(upperName) && upperName) {
+                    estadosSet.add(upperName);
+                    e.descripcion = upperName; // Forzar mayúsculas uniformes para no confundir
+                    estadosUnicos.push(e);
+                }
+            });
+
+            fill('ga-id-programa', json.data.programas, 'id', 'denominacion', 'Todos los programas');
+            fill('ba-id-programa', json.data.programas, 'id', 'denominacion', 'Todos');
+            fill('ga-id-ficha', json.data.fichas, 'id_ficha', 'codigo_ficha', 'Todas las fichas');
+            fill('ga-estado', estadosUnicos, 'id_estado', 'descripcion', 'Todos los estados');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('sidebar-collapsed') === '1') document.body.classList.add('sidebar-collapsed');
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            loadOptions().then(() => consultarGestionGeneral()).catch(() => {});
+            loadDashboardData();
+
+            // Global search
+            const globalSearch = document.getElementById('global-search-input');
+            if(globalSearch) {
+                globalSearch.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && this.value.trim()) {
+                        viewLearnerDetail(this.value.trim());
+                        this.value = '';
+                    }
+                });
+                globalSearch.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        if (this.value.trim().length >= 3) viewLearnerDetail(this.value.trim());
+                    }, 700);
+                });
+            }
+
+            // Pendientes search on Enter
+            const pendSearch = document.getElementById('pend-search');
+            if(pendSearch) {
+                pendSearch.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') loadPendientes();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
