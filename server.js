@@ -661,7 +661,7 @@ app.get("/api/dashboard/resumen-general", async (_req, res) => {
     console.error("Error en /api/dashboard/resumen-general:", error);
     res.status(500).json({
       ok: false,
-      message: "Error consultando v_resumen_general",
+      message: "",
       detail: error.message,
     });
   }

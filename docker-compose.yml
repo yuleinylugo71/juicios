@@ -1,0 +1,55 @@
+services:
+  # Servicio de la aplicación Node.js (Backend API + Frontend estático)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gestion_juicios_app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_NAME=${DB_NAME:-gestion_juicios}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # Servicio de base de datos PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: gestion_juicios_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-gestion_juicios}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    ports:
+      # Descomenta si necesitas conectarte directamente desde fuera (ej. DBeaver o pgAdmin)
+      # - "${DB_PORT_EXTERNAL:-5432}:5432"
+      []
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gestion_juicios}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
