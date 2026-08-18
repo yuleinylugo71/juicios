@@ -174,26 +174,51 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
         }
 
         .stat-card {
             background: var(--card-bg);
-            padding: 1.25rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            border-top: 4px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
             transition: var(--transition);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
         }
 
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-card.green { border-top-color: var(--secondary); }
-        .stat-card.orange { border-top-color: var(--warning); }
-        .stat-card.red { border-top-color: var(--danger); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        
+        .stat-card::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 5px; }
+        .stat-card.blue::before { background: var(--primary); }
+        .stat-card.green::before { background: var(--secondary); }
+        .stat-card.orange::before { background: var(--warning); }
+        .stat-card.red::before { background: var(--danger); }
 
-        .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; }
-        .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--text-main); }
+        .stat-info { display: flex; flex-direction: column; gap: 0.4rem; z-index: 1; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 2.2rem; font-weight: 800; color: var(--text-main); line-height: 1; }
+
+        .stat-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            z-index: 1;
+        }
+
+        .stat-card.blue .stat-icon { background: rgba(26, 35, 126, 0.1); color: var(--primary); }
+        .stat-card.green .stat-icon { background: rgba(0, 200, 83, 0.12); color: var(--secondary); }
+        .stat-card.orange .stat-icon { background: rgba(255, 171, 0, 0.12); color: var(--warning); }
+        .stat-card.red .stat-icon { background: rgba(255, 23, 68, 0.12); color: var(--danger); }
 
         .chart-container-compact {
             background: var(--card-bg);
@@ -601,6 +626,7 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -654,21 +680,33 @@
         <div id="tab-dashboard" class="tab-content active">
             <div class="dashboard-row">
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Aprendices Activos</div>
-                        <div class="stat-value" id="dash-total-aprendices">--</div>
+                    <div class="stat-card blue">
+                        <div class="stat-info">
+                            <div class="stat-label">Aprendices Activos</div>
+                            <div class="stat-value" id="dash-total-aprendices">--</div>
+                        </div>
+                        <div class="stat-icon"><i data-lucide="users"></i></div>
                     </div>
                     <div class="stat-card green">
-                        <div class="stat-label">Juicios Aprobados</div>
-                        <div class="stat-value" id="dash-total-aprobados">--</div>
+                        <div class="stat-info">
+                            <div class="stat-label">Juicios Aprobados</div>
+                            <div class="stat-value" id="dash-total-aprobados">--</div>
+                        </div>
+                        <div class="stat-icon"><i data-lucide="check-circle"></i></div>
                     </div>
                     <div class="stat-card orange">
-                        <div class="stat-label">Pendientes</div>
-                        <div class="stat-value" id="dash-total-pendientes">--</div>
+                        <div class="stat-info">
+                            <div class="stat-label">Pendientes</div>
+                            <div class="stat-value" id="dash-total-pendientes">--</div>
+                        </div>
+                        <div class="stat-icon"><i data-lucide="clock"></i></div>
                     </div>
                     <div class="stat-card red">
-                        <div class="stat-label">No Aprobados</div>
-                        <div class="stat-value" id="dash-total-no-aprobados">--</div>
+                        <div class="stat-info">
+                            <div class="stat-label">No Aprobados</div>
+                            <div class="stat-value" id="dash-total-no-aprobados">--</div>
+                        </div>
+                        <div class="stat-icon"><i data-lucide="x-circle"></i></div>
                     </div>
                 </div>
                 <div class="chart-container-compact">
@@ -1647,6 +1685,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
             if (localStorage.getItem('sidebar-collapsed') === '1') document.body.classList.add('sidebar-collapsed');
             document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             loadOptions().then(() => consultarGestionGeneral()).catch(() => {});
