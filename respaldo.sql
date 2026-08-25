@@ -640,13 +640,14 @@ ALTER FUNCTION public.fn_resumen_funcionario(p_id_funcionario integer, p_cargo c
 -- Name: fn_total_aprendices(integer, integer, integer, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.fn_total_aprendices(p_id_ficha integer DEFAULT NULL::integer, p_id_programa integer DEFAULT NULL::integer, p_version integer DEFAULT NULL::integer, p_nivel_formacion character varying DEFAULT NULL::character varying, p_estado_ficha character varying DEFAULT NULL::character varying) RETURNS TABLE(id_ficha integer, codigo_ficha character varying, programa character varying, total_aprendices bigint, total_fichas bigint)
+CREATE FUNCTION public.fn_total_aprendices(p_id_ficha integer DEFAULT NULL::integer, p_id_programa integer DEFAULT NULL::integer, p_version integer DEFAULT NULL::integer, p_nivel_formacion character varying DEFAULT NULL::character varying, p_estado_ficha character varying DEFAULT NULL::character varying) RETURNS TABLE(id_ficha integer, id_programa integer, codigo_ficha character varying, programa character varying, total_aprendices bigint, total_fichas bigint)
     LANGUAGE plpgsql
     AS $$
 BEGIN
     RETURN QUERY
     SELECT 
         f.id_ficha,
+        p.id AS id_programa,
         f.codigo_ficha,
         p.denominacion AS programa,
         COUNT(DISTINCT m.id_aprendiz) AS total_aprendices,
@@ -659,7 +660,7 @@ BEGIN
       AND (p_version IS NULL OR p.version = p_version)
       AND (p_nivel_formacion IS NULL OR p.nivel_formacion = p_nivel_formacion)
       AND (p_estado_ficha IS NULL OR f.estado_ficha = p_estado_ficha)
-    GROUP BY f.id_ficha, f.codigo_ficha, p.denominacion;
+    GROUP BY f.id_ficha, p.id, f.codigo_ficha, p.denominacion;
 END;
 $$;
 
