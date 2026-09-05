@@ -15,7 +15,8 @@ services:
       - DB_PORT=5432
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
-      - DB_NAME=${DB_NAME:-gestion_juicios}
+      - DB_NAME=${DB_NAME:-prueba}
+      - DB_SSL=false
     depends_on:
       db:
         condition: service_healthy
@@ -30,7 +31,7 @@ services:
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-gestion_juicios}
+      POSTGRES_DB: ${DB_NAME:-prueba}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d:ro
@@ -39,7 +40,7 @@ services:
       # - "${DB_PORT_EXTERNAL:-5432}:5432"
       []
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gestion_juicios}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-prueba}"]
       interval: 5s
       timeout: 5s
       retries: 5
