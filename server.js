@@ -677,7 +677,7 @@ function buildFunctionRoute(path, fnName, paramDefs) {
   app.get(path, async (req, res) => {
     try {
       const values = paramDefs.map((def) => def.parser(req.query[def.key]));
-      const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
+      const placeholders = paramDefs.map((def, i) => `$${i + 1}::${getParamPgType(def)}`).join(", ");
       const sql = `SELECT * FROM ${fnName}(${placeholders});`;
       const { rows } = await pool.query(sql, values);
       res.json({ ok: true, count: rows.length, data: rows });
@@ -690,6 +690,15 @@ function buildFunctionRoute(path, fnName, paramDefs) {
       });
     }
   });
+}
+
+function getParamPgType(def) {
+  if (def.pgType) return def.pgType;
+  if (def.parser === toIntOrNull) return "integer";
+  if (def.parser === toNumOrNull) return "numeric";
+  if (def.key.includes("fecha")) return "date";
+  if (def.key.includes("hora")) return "time";
+  return "varchar";
 }
 
 app.get("/api/dashboard/resumen-general", async (_req, res) => {
