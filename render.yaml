@@ -8,6 +8,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL
+        value: true
       - key: DB_HOST
         sync: false
       - key: DB_PORT

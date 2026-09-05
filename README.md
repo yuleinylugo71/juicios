@@ -59,8 +59,12 @@ docker compose up --build -d
 ## Variables de entorno
 
 - `PORT`: Puerto expuesto en el host (por defecto `3000`).
+- `DATABASE_URL`: URL completa de conexion PostgreSQL. Recomendada en Render y otros proveedores cloud.
+- `DB_SSL`: Usa `true` para conexiones cloud que requieren SSL. Usa `false` para local/Docker.
 - `DB_HOST`: Host de la base de datos (`db` cuando se usa Docker Compose).
 - `DB_PORT`: Puerto de PostgreSQL (`5432`).
 - `DB_USER`: Usuario de la base de datos.
 - `DB_PASSWORD`: Contraseña de la base de datos.
 - `DB_NAME`: Nombre de la base de datos.
+
+Si la aplicacion muestra `getaddrinfo ENOTFOUND <host>`, el backend no esta pudiendo resolver el host de PostgreSQL. En Render, copia la `External Database URL` o `Internal Database URL` correcta en `DATABASE_URL` y vuelve a desplegar.

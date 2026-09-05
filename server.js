@@ -23,13 +23,52 @@ loadLocalEnv();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const dbConfig = {
-  host: process.env.DB_HOST || "localhost",
-  port: Number(process.env.DB_PORT || 5432),
-  user: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "prueba",
-};
+function buildDbConfig() {
+  if (process.env.DATABASE_URL) {
+    const url = new URL(process.env.DATABASE_URL);
+    const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DB_SSL === "false" || isLocalHost ? false : { rejectUnauthorized: false },
+    };
+  }
+
+  const defaultHost = process.env.NODE_ENV === "production" ? "db" : "localhost";
+
+  return {
+    host: process.env.DB_HOST || defaultHost,
+    port: Number(process.env.DB_PORT || 5432),
+    user: process.env.DB_USER || "postgres",
+    password: process.env.DB_PASSWORD || "",
+    database: process.env.DB_NAME || "prueba",
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+  };
+}
+
+function getSafeDbLog(config) {
+  if (config.connectionString) {
+    const url = new URL(config.connectionString);
+    return {
+      host: url.hostname,
+      port: url.port || 5432,
+      user: decodeURIComponent(url.username || ""),
+      database: url.pathname.replace(/^\//, ""),
+      ssl: Boolean(config.ssl),
+      source: "DATABASE_URL",
+    };
+  }
+
+  return {
+    host: config.host,
+    port: config.port,
+    user: config.user,
+    database: config.database,
+    ssl: Boolean(config.ssl),
+    source: "DB_*",
+  };
+}
+
+const dbConfig = buildDbConfig();
 
 const pool = new Pool(dbConfig);
 
@@ -1515,5 +1554,5 @@ app.get("/api/health", async (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Servidor activo en http://localhost:${PORT}`);
-  console.log("DB Config:", { ...dbConfig, password: "******" });
+  console.log("DB Config:", getSafeDbLog(dbConfig));
 });
