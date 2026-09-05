@@ -38,7 +38,10 @@ function buildDbConfig() {
 function stripPsqlMetaCommands(sql) {
   return sql
     .split(/\r?\n/)
-    .filter((line) => !line.trimStart().startsWith("\\"))
+    .filter((line) => {
+      const trimmed = line.trimStart();
+      return !trimmed.startsWith("\\") && !trimmed.startsWith("--");
+    })
     .join("\n");
 }
 
